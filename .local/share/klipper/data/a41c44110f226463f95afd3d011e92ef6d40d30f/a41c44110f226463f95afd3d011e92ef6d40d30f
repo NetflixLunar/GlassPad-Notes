@@ -1,8 +1,0 @@
-[frieren@Frieren ~]$ cd /home/frieren
-git add index.html
-git commit -m "Initial commit"
-[master (root-commit) 7b64446] Initial commit
- 1 file changed, 804 insertions(+)
- create mode 100644 index.html
-[frieren@Frieren ~]$ 
-

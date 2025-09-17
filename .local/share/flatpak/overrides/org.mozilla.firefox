@@ -1,5 +1,0 @@
-[Context]
-filesystems=home;
-
-[Session Bus Policy]
-org.kde.plasma.browser.integration=talk

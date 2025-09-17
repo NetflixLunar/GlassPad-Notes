@@ -1,3 +1,0 @@
-cd /home/frieren
-git add index.html
-git commit -m "Initial commit"

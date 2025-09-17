@@ -1,10 +1,16 @@
-# Firefox profiles & cache
-.mozilla/
+# System files
+*.lock
+*.sqlite*
+*.bak
+*.swp
+*.tmp
+*.log
+
+# Local user data
+.local/
 .var/
+*.cache
+*.history
 
-# KDE/Plasma temp data
-.local/share/klipper/
-
-# System cache
-.cache/
-tmp/
+# Firefox profiles
+.mozilla/
