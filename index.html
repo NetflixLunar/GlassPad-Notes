@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GlassPad — Notes</title>
+
+<!-- Prism (syntax highlight) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css">
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+<!-- Prism language components -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-go.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-rust.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/command-line/prism-command-line.css">
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/command-line/prism-command-line.min.js"></script>
+
+<!-- marked for markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+:root{
+  --accent:#007aff;
+  --glass: rgba(255,255,255,0.72);
+  --border: rgba(255,255,255,0.55);
+  --text:#111;
+  --shadow: 0 24px 48px rgba(0,0,0,.18);
+  --radius:22px;
+  --tag-work:#0a84ff; --tag-personal:#34c759; --tag-idea:#ff9500;
+  --muted: rgba(0,0,0,.55);
+}
+
+/* reset / layout */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,system-ui;
+  background: url('wallhaven-4yk87g_3840x2160.png') center/cover fixed no-repeat;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:40px;
+  color:var(--text);
+}
+
+/* glass container */
+.container{
+  width:100%;
+  max-width:980px;
+  background:var(--glass);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:32px;
+}
+
+/* header */
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.title{font-size:26px;font-weight:700;letter-spacing:-0.3px}
+.controls{display:flex;gap:8px;align-items:center}
+
+/* forms */
+input[type="text"],select,textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.08);
+  background:rgba(255,255,255,0.55);
+  font-size:14px;
+  color:var(--text);
+  backdrop-filter: blur(6px);
+}
+textarea{min-height:130px;resize:none;margin-top:10px}
+
+/* buttons */
+.btn{
+  border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:14px;
+}
+.btn.primary{background:var(--accent);color:white}
+.btn.alt{background:rgba(0,0,0,0.06);color:var(--text)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 420px;gap:22px}
+@media(max-width:920px){ .layout{grid-template-columns:1fr} }
+
+/* left list */
+.left-col{display:flex;flex-direction:column;gap:10px}
+.controls-row{display:flex;gap:8px;align-items:center}
+.small{font-size:12px;color:var(--muted)}
+.kv{font-weight:700;margin-right:6px}
+
+/* notes list */
+.list{max-height:60vh;overflow:auto;padding-right:6px}
+.note-card{
+  background:rgba(255,255,255,0.58);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:12px;
+  border:1px solid rgba(0,0,0,.06);
+  transition:transform .12s, box-shadow .12s;
+  cursor:pointer;
+}
+.note-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.08)}
+.note-head{display:flex;justify-content:space-between;align-items:center}
+.note-meta{display:flex;gap:8px;align-items:center}
+.note-time{font-size:12px;opacity:.6;margin-bottom:8px}
+
+/* tag & star */
+.tag{padding:4px 8px;border-radius:999px;font-size:12px;color:white}
+.tag.work{background:var(--tag-work)}
+.tag.personal{background:var(--tag-personal)}
+.tag.idea{background:var(--tag-idea)}
+.star{font-size:16px;cursor:pointer;opacity:.9}
+
+/* preview/right */
+.preview{
+  background:rgba(255,255,255,0.42);
+  border-radius:14px;padding:14px;border:1px solid rgba(0,0,0,.05);
+  min-height:220px;
+}
+.preview h3{margin-top:0;margin-bottom:8px}
+.preview pre{
+  background:rgba(0,0,0,0.04)!important;padding:12px;border-radius:10px;overflow:auto;position:relative;
+}
+.code-copy{position:absolute;top:10px;right:10px;background:var(--accent);color:#fff;border:0;padding:6px 8px;border-radius:8px;cursor:pointer;opacity:0;transition:opacity .12s}
+.preview pre:hover .code-copy{opacity:1}
+@media(max-width:720px){ .code-copy{opacity:1} }
+
+/* search highlight */
+mark.search-hit{background:#fffa8b;color:#000;padding:0 2px;border-radius:3px}
+
+/* drag handle */
+.drag-handle{cursor:grab;padding:4px 6px;border-radius:6px;background:rgba(0,0,0,.05);font-size:12px}
+
+/* seasonal overlays */
+body.season-spring::after,
+body.season-summer::after,
+body.season-autumn::after,
+body.season-winter::after{
+  content:"";position:fixed;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:.45;
+}
+body.season-spring::after{background:linear-gradient(rgba(180,255,210,.05),transparent)}
+body.season-summer::after{background:linear-gradient(rgba(255,245,180,.04),transparent)}
+body.season-autumn::after{background:linear-gradient(rgba(255,200,160,.06),transparent)}
+body.season-winter::after{background:linear-gradient(rgba(255,255,255,.06),transparent)}
+</style>
+</head>
+
+<body>
+<div class="container" id="app" role="application">
+  <div class="header">
+    <div class="title">GlassPad — Notes</div>
+    <div class="controls">
+      <button id="themeBtn" class="btn alt" title="Cycle seasonal overlay">Season</button>
+      <button id="soundBtn" class="btn alt" title="Toggle ambient sound">Sound</button>
+      <button id="exportBtn" class="btn alt" title="Export notes">Export</button>
+      <label class="btn alt" style="cursor:pointer">
+        Import <input id="importFile" type="file" accept="application/json" style="display:none">
+      </label>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="left-col">
+      <input id="search" type="text" placeholder="Search notes (Ctrl/Cmd+K)" aria-label="Search notes">
+
+      <div class="controls-row">
+        <select id="langSelect" title="Language" style="width:220px">
+          <option value="">Plain Text</option>
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="java">Java</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+          <option value="php">PHP</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="bash">Bash / Shell</option>
+          <option value="bash command-line">Console w/ Prompt</option>
+        </select>
+
+        <select id="colorTag" title="Tag">
+          <option value="">No Tag</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="idea">Idea</option>
+        </select>
+
+        <label class="small" style="display:flex;align-items:center;gap:6px">
+          <input id="pinCheck" type="checkbox"> Pin
+        </label>
+      </div>
+
+      <textarea id="note" placeholder="Write your note or paste code here..."></textarea>
+
+      <div style="display:flex;gap:10px">
+        <button id="saveBtn" class="btn primary" title="Save note">Save (Ctrl/Cmd+Enter)</button>
+        <button id="clearDraftBtn" class="btn alt">Clear Draft</button>
+        <button id="autoSaveToggle" class="btn alt">AutoSave: On</button>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button id="reorderBtn" class="btn alt">Toggle Reorder</button>
+        <button id="syncBtn" class="btn alt">Sync (placeholder)</button>
+      </div>
+
+      <div class="small" style="margin-top:8px"><span class="kv">Notes:</span> Tap a card to open. Swipe left = delete, right = edit. Drag to reorder when enabled.</div>
+
+      <div class="list" id="noteList" aria-live="polite" style="margin-top:12px"></div>
+    </div>
+
+    <div class="preview saved-note" id="saved-note" aria-live="polite">
+      <p style="opacity:.6">Select a note to preview details and a console area.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================
+   Full working JS for GlassPad
+   - stores notes in localStorage
+   - supports pin/tag/lang/edit/delete
+   - autosave draft, import/export
+   - markdown preview, prism highlight
+   - drag reorder + swipe gestures
+   - ambient sound generator (WebAudio)
+   - PWA (service worker) registration
+   ============================== */
+
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Model ---
+  let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+  let autosave = true;
+  let reorderMode = false;
+  let editingId = null;
+  let ambientObj = null;
+  let seasonIndex = 0;
+  const seasons = ['none','season-spring','season-summer','season-autumn','season-winter'];
+
+  // DOM refs
+  const noteEl = document.getElementById('note');
+  const langSelect = document.getElementById('langSelect');
+  const tagSelect = document.getElementById('colorTag');
+  const pinCheck = document.getElementById('pinCheck');
+  const noteListEl = document.getElementById('noteList');
+  const savedNoteEl = document.getElementById('saved-note');
+  const searchEl = document.getElementById('search');
+
+  // Utilities
+  function persist(){ localStorage.setItem('notes', JSON.stringify(notes)); }
+  function uid(){ return Date.now() + Math.floor(Math.random()*9999); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  // Restore draft if present
+  (function restoreDraft(){
+    try {
+      const d = JSON.parse(localStorage.getItem('draft') || 'null');
+      if(d){
+        if(noteEl) noteEl.value = d.text || '';
+        if(langSelect) langSelect.value = d.lang || '';
+        if(tagSelect) tagSelect.value = d.tag || '';
+        if(pinCheck) pinCheck.checked = !!d.pinned;
+      }
+    }catch(e){ /* ignore */ }
+  })();
+
+  // Autosave draft every 3s
+  let autosaveTimer = setInterval(()=>{
+    if(!autosave) return;
+    const draft = { text: noteEl.value, lang: langSelect.value, tag: tagSelect.value, pinned: pinCheck.checked, timestamp: Date.now() };
+    localStorage.setItem('draft', JSON.stringify(draft));
+  }, 3000);
+
+  // Ambient generator using WebAudio (white noise lowpass -> gentle ambient)
+  function startAmbient(){
+    try{
+      if(ambientObj) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const bufferSize = 2 * ctx.sampleRate;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++){
+        data[i] = (Math.random() * 2 - 1) * 0.35;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.045;
+      source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      source.start(0);
+      ambientObj = { ctx, source, gain };
+      document.getElementById('soundBtn').textContent = 'Sound: On';
+    }catch(e){
+      console.warn('Ambient failed', e);
+      alert('Ambient audio not supported in this browser.');
+    }
+  }
+  function stopAmbient(){
+    if(!ambientObj) return;
+    try{
+      ambientObj.source.stop();
+      if(ambientObj.ctx && ambientObj.ctx.close) ambientObj.ctx.close();
+    }catch(e){/* ignore */}
+    ambientObj = null;
+    document.getElementById('soundBtn').textContent = 'Sound';
+  }
+
+  // Highlight helper for search snippet
+  function highlightText(text, query){
+    if(!query) return escapeHtml(text);
+    const q = query.trim();
+    if(!q) return escapeHtml(text);
+    const esc = escapeRegExp(q);
+    const re = new RegExp('(' + esc + ')', 'ig');
+    const parts = text.split(re);
+    return parts.map(p => {
+      if(p.match(new RegExp('^' + esc + '$', 'i'))) {
+        return `<mark class="search-hit">${escapeHtml(p)}</mark>`;
+      } else {
+        return escapeHtml(p);
+      }
+    }).join('');
+  }
+
+  // Build Prism classes for pre/code
+  function buildLangClasses(val){
+    if(!val) return {pre:'', code:''};
+    const parts = val.trim().split(/\s+/);
+    const pre = parts.map(p => p === 'command-line' ? 'command-line' : 'language-' + p).join(' ');
+    const code = parts.map(p => p === 'command-line' ? '' : 'language-' + p).filter(Boolean).join(' ');
+    return { pre, code };
+  }
+
+  // Render the notes list
+  function renderNotes(){
+    noteListEl.innerHTML = '';
+    if(!notes.length){ noteListEl.innerHTML = '<p style="opacity:.6">No notes yet.</p>'; return; }
+
+    const q = (searchEl.value || '').toLowerCase();
+
+    // sort pinned first, then by order if present, else createdAt desc
+    const sorted = notes.slice().sort((a,b) => {
+      if((a.pinned?1:0) !== (b.pinned?1:0)) return (b.pinned?1:0) - (a.pinned?1:0);
+      if(typeof a.order === 'number' && typeof b.order === 'number') return a.order - b.order;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    for(const n of sorted){
+      // build preview (limit length)
+      let previewRaw = n.text.length > 220 ? n.text.slice(0,220) + '…' : n.text;
+      let previewHtml = q ? highlightText(previewRaw, q) : escapeHtml(previewRaw);
+
+      const card = document.createElement('div');
+      card.className = 'note-card';
+      card.dataset.id = n.id;
+      card.setAttribute('draggable', reorderMode ? 'true' : 'false');
+
+      const tagHtml = n.tag ? `<span class="tag ${escapeHtml(n.tag)}">${escapeHtml(n.tag)}</span>` : '';
+
+      card.innerHTML = `
+        <div class="note-head">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="drag-handle" style="display:${reorderMode ? 'inline-flex' : 'none'}">☰</div>
+            <div>
+              <div class="note-time">${new Date(n.createdAt).toLocaleString()}</div>
+              <div style="font-size:14px">${previewHtml}</div>
+            </div>
+          </div>
+          <div class="note-meta">
+            ${tagHtml}
+            <div class="star" data-id="${n.id}" title="Pin/unpin">${n.pinned ? '⭐' : '☆'}</div>
+          </div>
+        </div>`;
+
+      // click to open (avoid click on star)
+      card.addEventListener('click', (ev) => {
+        if(ev.target.classList.contains('star') || ev.target.closest('.star')) return;
+        if(ev.target.classList.contains('drag-handle')) return;
+        showNoteDetails(Number(card.dataset.id));
+      });
+
+      // star toggle
+      const star = card.querySelector('.star');
+      star && star.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePin(Number(star.dataset.id));
+      });
+
+      addSwipeHandlers(card); // touch
+      addCardDragHandlers(card);
+
+      noteListEl.appendChild(card);
+    }
+  }
+
+  // Show note details with Prism highlight and markdown preview
+  function showNoteDetails(id){
+    const note = notes.find(n => n.id === Number(id));
+    if(!note) return;
+    const classes = buildLangClasses(note.lang || '');
+    let mainHtml = '';
+    if(note.lang){
+      mainHtml = `<pre class="${classes.pre}"><button class="code-copy" onclick="(function(b){ navigator.clipboard.writeText(b.querySelector('code').innerText).then(()=>{const old=b.querySelector('button').textContent; b.querySelector('button').textContent='Copied!'; setTimeout(()=>b.querySelector('button').textContent=old,1200); }).catch(()=>alert('Copy failed')); })(this.parentElement)"><!--inline--></button><code class="${classes.code}">${escapeHtml(note.text)}</code></pre>`;
+      // The inline button above is a little hack — we'll replace it below with a real handler to avoid inline JS; simpler: we'll just create DOM elements after set.
+    } else {
+      mainHtml = `<p>${escapeHtml(note.text).replace(/\n/g,'<br>')}</p>`;
+    }
+
+    // markdown preview if it looks like markdown
+    let mdPreview = '';
+    try {
+      if((!note.lang || note.lang === 'html') && /(^|\n)\s*#{1,6}\s+/.test(note.text + '\n')){
+        mdPreview = `<h4 style="margin-top:10px">Markdown Preview</h4><div>${marked.parse(note.text)}</div>`;
+      } else if(note.lang && note.lang.includes('markdown')){
+        mdPreview = `<h4 style="margin-top:10px">Markdown Preview</h4><div>${marked.parse(note.text)}</div>`;
+      }
+    }catch(e){ mdPreview = ''; }
+
+    const tagHtml = note.tag ? `<div style="margin-top:8px"><span class="tag ${escapeHtml(note.tag)}">${escapeHtml(note.tag)}</span></div>` : '';
+
+    savedNoteEl.innerHTML = `
+      <h3>Note Details</h3>
+      <div id="note-main">${mainHtml}</div>
+      ${tagHtml}
+      ${mdPreview}
+      <p style="margin-top:12px"><strong>Created:</strong> ${new Date(note.createdAt).toLocaleString()}</p>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="detail-edit" class="btn primary">Edit</button>
+        <button id="detail-delete" class="btn alt">Delete</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div contenteditable="true" id="console-scratch" class="small" style="background:rgba(0,0,0,0.03);padding:10px;border-radius:8px;min-height:40px">Console / scratchpad — editable</div>
+      </div>
+    `;
+
+    // add copy button to pre if exists
+    const preEl = savedNoteEl.querySelector('pre');
+    if(preEl){
+      // create copy button correctly (not inline JS)
+      const btn = document.createElement('button');
+      btn.className = 'code-copy';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', ()=> {
+        const codeEl = preEl.querySelector('code');
+        if(!codeEl) return;
+        navigator.clipboard.writeText(codeEl.innerText).then(()=>{
+          const old = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(()=>btn.textContent = old,1200);
+        }).catch(()=>alert('Copy failed'));
+      });
+      preEl.style.position = 'relative';
+      preEl.appendChild(btn);
+    }
+
+    // detail button handlers
+    document.getElementById('detail-edit').addEventListener('click', ()=> {
+      editNote(note.id);
+    });
+    document.getElementById('detail-delete').addEventListener('click', ()=> {
+      deleteNote(note.id);
+    });
+
+    Prism.highlightAllUnder(savedNoteEl);
+  }
+
+  // Save note (create or update)
+  function saveNote(){
+    const text = noteEl.value.trim();
+    if(!text){ alert('Write something before saving.'); return; }
+    const lang = langSelect.value;
+    const tag = tagSelect.value;
+    const pinned = pinCheck.checked;
+    if(editingId){
+      // update existing
+      const idx = notes.findIndex(n => n.id === editingId);
+      if(idx !== -1){
+        notes[idx].text = text;
+        notes[idx].lang = lang;
+        notes[idx].tag = tag;
+        notes[idx].pinned = pinned;
+        // keep createdAt, order
+      }
+      editingId = null;
+    } else {
+      const newNote = { id: uid(), text, lang, tag, pinned, createdAt: new Date().toISOString() };
+      notes.push(newNote);
+    }
+    persist();
+    renderNotes();
+    clearDraft(false);
+  }
+
+  // Delete note
+  function deleteNote(id){
+    if(!confirm('Delete this note?')) return;
+    notes = notes.filter(n => n.id !== id);
+    persist();
+    renderNotes();
+    savedNoteEl.innerHTML = '<p style="opacity:.6">Select a note to preview details and Markdown/code.</p>';
+  }
+
+  // Edit note (populate editor)
+  function editNote(id){
+    const idx = notes.findIndex(n => n.id === id);
+    if(idx === -1) return;
+    const n = notes[idx];
+    noteEl.value = n.text;
+    langSelect.value = n.lang || '';
+    tagSelect.value = n.tag || '';
+    pinCheck.checked = !!n.pinned;
+    editingId = n.id;
+    // remove temporary from array; keep for re-save - we'll update on save
+    notes.splice(idx,1);
+    persist();
+    renderNotes();
+    noteEl.focus();
+  }
+
+  // Toggle pin
+  function togglePin(id){
+    const n = notes.find(x => x.id === Number(id));
+    if(!n) return;
+    n.pinned = !n.pinned;
+    persist(); renderNotes();
+  }
+
+  // Clear draft
+  function clearDraft(showAlert=true){
+    noteEl.value = '';
+    langSelect.value = '';
+    tagSelect.value = '';
+    pinCheck.checked = false;
+    editingId = null;
+    if(showAlert) alert('Draft cleared.');
+  }
+
+  // Export/Import
+  function exportNotes(){
+    const data = JSON.stringify(notes, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'glasspad-notes.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+  function importNotes(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const imported = JSON.parse(reader.result);
+        if(!Array.isArray(imported)) throw new Error('Invalid file');
+        // set unique IDs for imported items
+        imported.forEach(it => it.id = uid());
+        notes = notes.concat(imported);
+        persist(); renderNotes();
+        alert('Imported notes added.');
+      }catch(e){
+        alert('Import failed: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Drag & Drop helpers (list-level listeners attached once)
+  function getDragAfterElement(container, y){
+    const draggableElements = [...container.querySelectorAll('.note-card:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if(offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+      else return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // Add drag handlers for an individual card
+  function addCardDragHandlers(card){
+    card.addEventListener('dragstart', (e) => {
+      if(!reorderMode) { e.preventDefault(); return; }
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', card.dataset.id); } catch(e){}
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  }
+
+  // Setup list dragover & drop once
+  (function setupListDrag(){
+    noteListEl.addEventListener('dragover', (e) => {
+      if(!reorderMode) return;
+      e.preventDefault();
+      const after = getDragAfterElement(noteListEl, e.clientY);
+      const dragging = noteListEl.querySelector('.dragging');
+      if(!dragging) return;
+      if(after == null) noteListEl.appendChild(dragging);
+      else noteListEl.insertBefore(dragging, after);
+    });
+    noteListEl.addEventListener('drop', (e) => {
+      if(!reorderMode) return;
+      e.preventDefault();
+      // save order
+      const cards = Array.from(noteListEl.children);
+      cards.forEach((c, idx) => {
+        const id = Number(c.dataset.id);
+        const note = notes.find(n => n.id === id);
+        if(note) note.order = idx;
+      });
+      persist();
+      renderNotes();
+    });
+  })();
+
+  // Swipe touch handlers for mobile
+  function addSwipeHandlers(el){
+    let startX = 0, startY = 0, active = false;
+    el.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY; active = true;
+      el.style.transition = 'none';
+    }, {passive:true});
+    el.addEventListener('touchmove', (e) => {
+      if(!active) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if(Math.abs(dx) > Math.abs(dy)){
+        e.preventDefault();
+        el.style.transform = `translateX(${dx}px)`;
+      }
+    }, {passive:false});
+    el.addEventListener('touchend', (e) => {
+      if(!active) return;
+      active = false; el.style.transition = 'transform .2s';
+      const transform = getComputedStyle(el).transform;
+      let tx = 0;
+      if(transform && transform !== 'none'){
+        const vals = transform.match(/matrix.*\((.+)\)/);
+        if(vals && vals[1]){
+          const arr = vals[1].split(', ');
+          tx = parseFloat(arr[4]);
+        }
+      }
+      el.style.transform = 'translateX(0)';
+      if(tx < -100){
+        // delete
+        const id = Number(el.dataset.id);
+        if(confirm('Delete this note?')) deleteNote(id);
+      } else if(tx > 100){
+        const id = Number(el.dataset.id);
+        editNote(id);
+      }
+    }, {passive:true});
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const mod = navigator.platform.toLowerCase().includes('mac') ? e.metaKey : e.ctrlKey;
+    if(mod && (e.key === 'Enter' || e.key === 'Enter')){ e.preventDefault(); saveNote(); }
+    if(mod && e.key.toLowerCase() === 'k'){ e.preventDefault(); searchEl.focus(); }
+    if(e.key === 'Escape'){ // cancel edit/drafts quickly
+      editingId = null;
+      // optional: clearDraft(false);
+    }
+  });
+
+  // Render initially
+  renderNotes();
+
+  // --- Event wiring (DOM elements) ---
+  // Save
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn && saveBtn.addEventListener('click', saveNote);
+
+  // Clear draft
+  const clearDraftBtn = document.getElementById('clearDraftBtn');
+  clearDraftBtn && clearDraftBtn.addEventListener('click', ()=> clearDraft(true));
+
+  // Search
+  searchEl && searchEl.addEventListener('input', () => renderNotes());
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', exportNotes);
+
+  // Import
+  const importFileEl = document.getElementById('importFile');
+  importFileEl && importFileEl.addEventListener('change', (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if(f) importNotes(f);
+    importFileEl.value = '';
+  });
+
+  // Reorder toggle
+  const reorderBtn = document.getElementById('reorderBtn');
+  reorderBtn && reorderBtn.addEventListener('click', () => {
+    reorderMode = !reorderMode;
+    reorderBtn.textContent = reorderMode ? 'Reordering: On' : 'Toggle Reorder';
+    renderNotes();
+  });
+
+  // Sync placeholder
+  const syncBtn = document.getElementById('syncBtn');
+  syncBtn && syncBtn.addEventListener('click', () => {
+    alert('Multi-device sync requires a backend (Firebase/Supabase). I can help wire it if you want.');
+    console.info('To enable sync: choose backend, add API keys, implement push/pull functions.');
+  });
+
+  // Season button
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn && themeBtn.addEventListener('click', () => {
+    seasonIndex = (seasonIndex + 1) % seasons.length;
+    document.body.className = seasons[seasonIndex] === 'none' ? '' : seasons[seasonIndex];
+  });
+
+  // Sound toggle
+  const soundBtn = document.getElementById('soundBtn');
+  soundBtn && soundBtn.addEventListener('click', () => {
+    if(ambientObj){ stopAmbient(); } else { startAmbient(); }
+  });
+
+  // Autosave toggle
+  const autoBtn = document.getElementById('autoSaveToggle');
+  autoBtn && autoBtn.addEventListener('click', () => {
+    autosave = !autosave;
+    autoBtn.textContent = `AutoSave: ${autosave ? 'On' : 'Off'}`;
+    if(autosave && !autosaveTimer) {
+      autosaveTimer = setInterval(()=> { // restore interval if cleared
+        if(!autosave) return;
+        const draft = { text: noteEl.value, lang: langSelect.value, tag: tagSelect.value, pinned: pinCheck.checked, timestamp: Date.now() };
+        localStorage.setItem('draft', JSON.stringify(draft));
+      }, 3000);
+    }
+  });
+
+  // Dynamic blur on scroll
+  noteListEl.addEventListener('scroll', (e) => {
+    const sc = e.target.scrollTop || 0;
+    const blur = Math.min(48, 22 + sc / 30);
+    document.querySelector('.container').style.backdropFilter = `blur(${blur}px) saturate(180%)`;
+  });
+
+  // PWA manifest + service worker (best-effort; will fail silently on file://)
+  (function registerPWA(){
+    try{
+      const manifest = {
+        name: "GlassPad",
+        short_name: "GlassPad",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#ffffff",
+        icons: [{ src: "wallhaven-4yk87g_3840x2160.png", sizes: "512x512", type: "image/png" }]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('link'); link.rel = 'manifest'; link.href = url;
+      document.head.appendChild(link);
+
+      if('serviceWorker' in navigator){
+        const swCode = `
+          const CACHE = 'glasspad-v1';
+          const urlsToCache = ['./'];
+          self.addEventListener('install', e => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(urlsToCache)).catch(()=>{}));
+          });
+          self.addEventListener('activate', e => { self.clients.claim(); });
+          self.addEventListener('fetch', e => {
+            e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).then(()=> console.info('SW registered (if supported)')).catch(()=> console.info('SW not registered'));
+      }
+    }catch(err){ console.warn('PWA skipped', err); }
+  })();
+
+  // Helper to expose functions for inline copy button in old debug code if needed
+  window.showNoteDetails = showNoteDetails;
+  window.editNote = editNote;
+  window.deleteNote = deleteNote;
+  window.togglePin = togglePin;
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
