@@ -1,0 +1,4 @@
+cd /home/frieren
+git init
+git add index.html        # add other files if you have CSS/JS
+git commit -m "Initial commit"

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE khotnewstuff3>
+<hotnewstuffregistry>
+ <stuff category="104">
+  <name>Sweet KDE</name>
+  <providerid>api.kde-look.org</providerid>
+  <author>eliverlara</author>
+  <homepage>https://store.kde.org/p/1294174</homepage>
+  <licence></licence>
+  <version></version>
+  <rating>89</rating>
+  <downloads>134984</downloads>
+  <installedfile>/home/frieren/.local/share/plasma/desktoptheme/Sweet/</installedfile>
+  <id>1294174</id>
+  <releasedate>2025-09-15</releasedate>
+  <summary>&lt;p>A dark and modern theme for Plasma  based on the awesome &lt;a href="https://store.kde.org/p/998869/">Helium&lt;/a> theme.&lt;br />&lt;br />&lt;/p>&lt;h2>&lt;b>&amp;iexcl;IMPORTANT!&lt;/b>&lt;/h2>&lt;br />&lt;b> Hi, if you are really enjoying these themes from me and also from other authors please consider  &lt;a href="https://www.pling.com/support-predefined?section_id=5&amp;amp;amount_predefined=1"> becoming a supporter for the  KDE Themes and Extensions section &lt;/a> , I'm sure that me and others creators would be very grateful with your sponsorship since that help us to  keep mantaining and creating new themes for the community &lt;img class="decoda-emoticon" src="https://www.pling.com/media/emoticons/happy.png" alt="" />  &lt;/b>&lt;br />&lt;br />&lt;a href="https://www.pling.com/support-predefined?section_id=5&amp;amp;amount_predefined=1">&lt;b> Become a supporter here &lt;/b>&lt;/a>&lt;br />&lt;br />Suggested settings: &lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1294013/">Sweet Kvantum theme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1286856/">Sweet Aurorae theme &lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1294011/">Sweet color scheme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1297008/">Sweet Konsole color scheme &lt;/a>&lt;br />&lt;br />&lt;a href="https://www.pling.com/p/1305251/">Candy icons&lt;/a>&lt;br />&lt;br />&lt;b>- Note -&lt;/b>&lt;br />&lt;br />Firefox: if you are a firefox user, you can give a chance to the &lt;a href="https://addons.mozilla.org/es/firefox/addon/sweet-dark/">sweet-dark&lt;/a> extension for a better looking or try my complete &lt;a href="https://github.com/EliverLara/firefox-sweet-theme">&lt;b>Firefox-Sweet-Theme&lt;/b> &lt;/a>.</summary>
+  <changelog></changelog>
+  <preview>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1294174/screenshot-20211218-162026.png</preview>
+  <previewBig>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1294174/screenshot-20211218-162026.png</previewBig>
+  <payload>https://files06.pling.com/api/files/download/j/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTc0NTYwODk5OSwibyI6IjEiLCJzIjoiYTIyYTQ5ZWRkOTdjZjRlMjRlMWJmMjEzMWY0MjM1NzBjNGExMzRmZTQyZDEwNWM3MDhhOGFiMzViNTExYTcwYmIyZTA0ZDA1MzI3M2NmZGNhZDRjNGY1NTU1MjJhZmIzOTIwNWMyNGZjYzcyMDA3N2Q5MjAwMWI0ODRhMWQ4ZjQiLCJ0IjoxNzU4MDI0MDIzLCJzdGZwIjpudWxsLCJzdGlwIjoiMjEzLjIzMC43OC4xMDUifQ.JYivHqPg0XKVPLk6tQYAC_r6VyYt_SdGTu5xRSgWMOQ/Sweet.tar.xz</payload>
+  <tags>cc-by-sa,linux,kde,unix,theme,plasma</tags>
+  <status>installed</status>
+ </stuff>
+ <stuff category="104">
+  <name>Sweet Ambar Blue Plasma</name>
+  <providerid>api.kde-look.org</providerid>
+  <author>eliverlara</author>
+  <homepage>https://store.kde.org/p/1897309</homepage>
+  <licence></licence>
+  <version></version>
+  <rating>60</rating>
+  <downloads>101299</downloads>
+  <installedfile>/home/frieren/.local/share/plasma/desktoptheme/Sweet-Ambar-Blue/</installedfile>
+  <id>1897309</id>
+  <releasedate>2025-09-15</releasedate>
+  <summary>&lt;p>Sweet Ambar Blue Plasma Theme&lt;br />&lt;br />For better looking please use this theme with  &lt;a href="https://github.com/tsujan/Kvantum/tree/master/Kvantum">Kvantum&lt;/a> engine, you can find the official installation instructions &lt;a href="https://raw.githubusercontent.com/tsujan/Kvantum/master/Kvantum/INSTALL">here&lt;/a>.&lt;br />&lt;br />Suggested setings: &lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1294013/">Sweet-Ambar-Blue Kvantum theme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1897308/">Sweet-Ambar-blue Aurorae theme &lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1897307/">Sweet-Ambar-Blue colorscheme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1297008/">Sweet-Ambar-Blue Konsole color scheme &lt;/a>&lt;br />&lt;br />&lt;a href="https://www.pling.com/p/1305251/">Candy icons&lt;/a>&lt;br />&lt;br />&lt;a href="https://www.pling.com/p/1309907/">Sweet wallpaper&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1334945/"> Sweet sddm theme &lt;/a>&lt;br />&lt;br />&lt;a href="https://dribbble.com/shots/3373125-Hexagonal-planets-and-cosmic-dust?utm_source=Pinterest_Shot"> Wallpaper in screenshot here&lt;/a>&lt;br />&lt;br />&lt;b>- Note -&lt;/b>&lt;br />&lt;br />Firefox: if you are a firefox user, you can give a chance to the &lt;a href="https://addons.mozilla.org/es/firefox/addon/sweet-dark/">sweet-dark&lt;/a> extension for a better looking or try my complete &lt;a href="https://github.com/EliverLara/firefox-sweet-theme">&lt;b>Firefox-Sweet-Theme&lt;/b> &lt;/a>.&lt;/p></summary>
+  <changelog></changelog>
+  <preview>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1897309/screenshot-20220904-140110.png</preview>
+  <previewBig>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1897309/screenshot-20220904-140110.png</previewBig>
+  <payload>https://files06.pling.com/api/files/download/j/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTc0NTYwODk1MiwibyI6IjEiLCJzIjoiYjAyYTZjZGY0ODZlMWVlODViYTU0OTNiNjcyNDI2Zjg3YzAzMTRmYWJmYTJkMGY5NjljM2I2MjY2ZjFlNTI1OGExZmE2MTM2ZWE4YzUyMzM5NDBiZDFkNzZmMWM4ZWIxYTM0NTA4MjA4MzhkYjNkNGFmNDUwYWE3NmRkMTU0ZGMiLCJ0IjoxNzU4MDI0MDcyLCJzdGZwIjpudWxsLCJzdGlwIjoiMjEzLjIzMC43OC4xMDUifQ.bDuM6JSLLsj0keCEnP5wGuejls8dZPso3m1-6QmIcqg/Sweet-Ambar-Blue.tar.xz</payload>
+  <tags>linux,kde,plasma,unix,theme,cc-by-sa</tags>
+  <status>installed</status>
+ </stuff>
+ <stuff category="104">
+  <name>Sweet Mars KDE</name>
+  <providerid>api.kde-look.org</providerid>
+  <author>eliverlara</author>
+  <homepage>https://store.kde.org/p/1393498</homepage>
+  <licence></licence>
+  <version></version>
+  <rating>71</rating>
+  <downloads>124892</downloads>
+  <installedfile>/home/frieren/.local/share/plasma/desktoptheme/Sweet-mars/</installedfile>
+  <id>1393498</id>
+  <releasedate>2025-09-13</releasedate>
+  <summary>&lt;p>A dark and modern theme for Plasma.&lt;br />&lt;br />&lt;/p>&lt;h2>&lt;b>&amp;iexcl;IMPORTANT!&lt;/b>&lt;/h2>&lt;br />&lt;b> Hi, if you are really enjoying these themes from me and also from other authors please consider  &lt;a href="https://www.pling.com/support-predefined?section_id=5&amp;amp;amount_predefined=1"> becoming a supporter for the  KDE Themes and Extensions section &lt;/a> , I'm sure that me and others creators would be very grateful with your sponsorship since that help us to  keep mantaining and creating new themes for the community &lt;img class="decoda-emoticon" src="https://www.pling.com/media/emoticons/happy.png" alt="" />  &lt;/b>&lt;br />&lt;br />&lt;a href="https://www.pling.com/support-predefined?section_id=5&amp;amp;amount_predefined=1">&lt;b> Become a supporter here &lt;/b>&lt;/a>&lt;br />&lt;br />Suggested settings: &lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1294013/">Sweet-Mars Kvantum theme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1393497/">Sweet-Mars Aurorae theme &lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1393486/">Sweet-Mars color scheme&lt;/a>&lt;br />&lt;br />&lt;a href="https://store.kde.org/p/1297008/">Sweet-Mars Konsole color scheme &lt;/a>&lt;br />&lt;br />&lt;a href="https://www.pling.com/p/1305251/">Candy icons&lt;/a>&lt;br />&lt;br />&lt;b>- Note -&lt;/b>&lt;br />&lt;br />Firefox: if you are a firefox user, you can give a chance to  my complete &lt;a href="https://github.com/EliverLara/firefox-sweet-theme">&lt;b>Firefox-Sweet-Theme&lt;/b> &lt;/a>.</summary>
+  <changelog></changelog>
+  <preview>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1393498/64308f5f8222946f0cc9d786c63d987cf281.png</preview>
+  <previewBig>https://images.pling.com/cache/770x540-4/img/00/00/36/61/48/1393498/64308f5f8222946f0cc9d786c63d987cf281.png</previewBig>
+  <payload>https://files06.pling.com/api/files/download/j/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTczNjkwNzIwOCwibyI6IjEiLCJzIjoiMzU1MjhiMTQ1NjE2OWQ2NmIwNWFjZTJlZjIzNGM0NTJmOGFkZDFlNDI3MzEyNDY2NmY1YTI5YzczMjJjNWU2NWRhOTI5ZTAxNWUxZTZjNzhlYjE3NmY1MzZjYjM5MTRiNzFiZmM5ZGU5NGJhMDI1MmY3ZDEzMjg2ZmFlZDc0YzciLCJ0IjoxNzU4MDI0MTE1LCJzdGZwIjpudWxsLCJzdGlwIjoiMjEzLjIzMC43OC4xMDUifQ.gzjtACe0jYruw1SXDZDQTuZZ64-C0uXGGgvIqwO9bxw/Sweet-mars.tar.xz</payload>
+  <tags>plasma,theme,unix,linux,gplv3,kde</tags>
+  <status>installed</status>
+ </stuff>
+</hotnewstuffregistry>

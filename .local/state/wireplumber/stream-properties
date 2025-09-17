@@ -1,0 +1,7 @@
+[stream-properties]
+Input/Audio:application.id:org.kde.plasma-pa={"channelVolumes":[1.000000], "mute":false, "channelMap":["MONO"], "volume":1.000000}
+Output/Audio:application.name:Firefox={"channelMap":["FL", "FR"], "volume":1.000000, "mute":false, "channelVolumes":[0.993104, 0.993104]}
+Output/Audio:application.name:Telegram\sDesktop={"volume":1.000000, "mute":false, "channelMap":["FL", "FR"], "channelVolumes":[1.000000, 1.000000]}
+Output/Audio:media.role:Game={"volume":1.000000, "mute":false, "channelMap":["FL", "FR"], "channelVolumes":[1.000000, 1.000000]}
+Output/Audio:media.role:Notification={"channelVolumes":[1.000000, 1.000000], "volume":1.000000, "mute":false, "channelMap":["FL", "FR"]}
+Output/Audio:media.role:alert={"volume":1.000000, "mute":false, "channelMap":["FL", "FR"], "channelVolumes":[1.000000, 1.000000]}
