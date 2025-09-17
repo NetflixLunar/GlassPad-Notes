@@ -153,16 +153,40 @@ body.season-spring::after{background:linear-gradient(rgba(180,255,210,.05),trans
 body.season-summer::after{background:linear-gradient(rgba(255,245,180,.04),transparent)}
 body.season-autumn::after{background:linear-gradient(rgba(255,200,160,.06),transparent)}
 body.season-winter::after{background:linear-gradient(rgba(255,255,255,.06),transparent)}
+
+/* snackbar */
+.snackbar {
+  position:fixed; left:50%; transform:translateX(-50%); bottom:28px;
+  background: rgba(20,20,20,0.9); color:white; padding:12px 16px; border-radius:10px;
+  display:flex; gap:12px; align-items:center; box-shadow:0 8px 24px rgba(0,0,0,.28);
+  z-index:9999; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s;
+}
+.snackbar.show { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(-6px); }
+.snackbar button { background:transparent; color:var(--accent); border:0; font-weight:700; cursor:pointer; }
+
+.preview-split { display:flex; gap:10px; align-items:stretch; height:100%; }
+.preview-split > .preview { flex:1; min-width:0; }
+.preview-split > .preview.right { width:320px; max-width:45%; min-width:220px; overflow:auto; }
+
+/* volume control */
+.volume-wrap { display:flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(0,0,0,.04); border-radius:10px; }
+
 </style>
 </head>
 
 <body>
-<div class="container" id="app" role="application">
+<div class="container" id="app" role="application" aria-label="GlassPad note app">
   <div class="header">
     <div class="title">GlassPad — Notes</div>
-    <div class="controls">
+    <div class="controls" aria-hidden="false">
       <button id="themeBtn" class="btn alt" title="Cycle seasonal overlay">Season</button>
-      <button id="soundBtn" class="btn alt" title="Toggle ambient sound">Sound</button>
+
+      <div class="volume-wrap" title="Ambient volume">
+        <label for="volume" style="font-size:13px;color:var(--muted);margin-right:6px">Sound</label>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.045" style="width:110px">
+        <button id="soundBtn" class="btn alt" title="Toggle ambient">Sound: Off</button>
+      </div>
+
       <button id="exportBtn" class="btn alt" title="Export notes">Export</button>
       <label class="btn alt" style="cursor:pointer">
         Import <input id="importFile" type="file" accept="application/json" style="display:none">
@@ -216,31 +240,36 @@ body.season-winter::after{background:linear-gradient(rgba(255,255,255,.06),trans
         <button id="syncBtn" class="btn alt">Sync (placeholder)</button>
       </div>
 
-      <div class="small" style="margin-top:8px"><span class="kv">Notes:</span> Tap a card to open. Swipe left = delete, right = edit. Drag to reorder when enabled.</div>
+      <div class="small" style="margin-top:8px"><span class="kv">Notes:</span> Tap a card to open. Swipe left = delete (undo available), right = pin/unpin. Drag to reorder when enabled.</div>
 
       <div class="list" id="noteList" aria-live="polite" style="margin-top:12px"></div>
     </div>
 
     <div class="preview saved-note" id="saved-note" aria-live="polite">
-      <p style="opacity:.6">Select a note to preview details and a console area.</p>
+      <p style="opacity:.6">Select a note to preview details and Markdown/code. Live Markdown preview appears while typing.</p>
     </div>
   </div>
 </div>
 
+<!-- snackbar for undo -->
+<div id="snackbar" class="snackbar" role="status" aria-live="polite" aria-atomic="true" style="display:flex;align-items:center;">
+  <span id="snack-msg">Note deleted</span>
+  <button id="snack-undo">Undo</button>
+</div>
+
 <script>
 /* =============================
-   Full working JS for GlassPad
-   - stores notes in localStorage
-   - supports pin/tag/lang/edit/delete
-   - autosave draft, import/export
-   - markdown preview, prism highlight
-   - drag reorder + swipe gestures
-   - ambient sound generator (WebAudio)
-   - PWA (service worker) registration
+   Improved GlassPad JS
+   - live markdown preview
+   - undoable deletes (snackbar)
+   - import dedupe or replace
+   - swipe updated: right=pin, left=delete-with-undo
+   - volume control for ambient sound
+   - service worker caches external libs
    ============================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Model ---
+  // --- Model + state ---
   let notes = JSON.parse(localStorage.getItem('notes') || '[]');
   let autosave = true;
   let reorderMode = false;
@@ -248,6 +277,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let ambientObj = null;
   let seasonIndex = 0;
   const seasons = ['none','season-spring','season-summer','season-autumn','season-winter'];
+
+  // Soft-delete buffer for undo
+  let lastDeleted = null; // { note, timeoutId }
 
   // DOM refs
   const noteEl = document.getElementById('note');
@@ -257,6 +289,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const noteListEl = document.getElementById('noteList');
   const savedNoteEl = document.getElementById('saved-note');
   const searchEl = document.getElementById('search');
+  const snackbar = document.getElementById('snackbar');
+  const snackMsg = document.getElementById('snack-msg');
+  const snackUndo = document.getElementById('snack-undo');
+  const volumeEl = document.getElementById('volume');
+  const soundBtn = document.getElementById('soundBtn');
 
   // Utilities
   function persist(){ localStorage.setItem('notes', JSON.stringify(notes)); }
@@ -273,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(langSelect) langSelect.value = d.lang || '';
         if(tagSelect) tagSelect.value = d.tag || '';
         if(pinCheck) pinCheck.checked = !!d.pinned;
+        renderLivePreview();
       }
     }catch(e){ /* ignore */ }
   })();
@@ -303,11 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
       filter.type = 'lowpass';
       filter.frequency.value = 800;
       const gain = ctx.createGain();
-      gain.gain.value = 0.045;
+      gain.gain.value = parseFloat(volumeEl.value) || 0.045;
       source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
       source.start(0);
       ambientObj = { ctx, source, gain };
-      document.getElementById('soundBtn').textContent = 'Sound: On';
+      soundBtn.textContent = 'Sound: On';
     }catch(e){
       console.warn('Ambient failed', e);
       alert('Ambient audio not supported in this browser.');
@@ -320,24 +358,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if(ambientObj.ctx && ambientObj.ctx.close) ambientObj.ctx.close();
     }catch(e){/* ignore */}
     ambientObj = null;
-    document.getElementById('soundBtn').textContent = 'Sound';
+    soundBtn.textContent = 'Sound: Off';
   }
+
+  volumeEl.addEventListener('input', () => {
+    if(ambientObj && ambientObj.gain) ambientObj.gain.gain.value = parseFloat(volumeEl.value);
+  });
 
   // Highlight helper for search snippet
   function highlightText(text, query){
     if(!query) return escapeHtml(text);
     const q = query.trim();
     if(!q) return escapeHtml(text);
-    const esc = escapeRegExp(q);
-    const re = new RegExp('(' + esc + ')', 'ig');
-    const parts = text.split(re);
-    return parts.map(p => {
-      if(p.match(new RegExp('^' + esc + '$', 'i'))) {
-        return `<mark class="search-hit">${escapeHtml(p)}</mark>`;
-      } else {
-        return escapeHtml(p);
-      }
-    }).join('');
+    // highlight each match of any keyword
+    const parts = q.split(/\s+/).filter(Boolean).map(escapeRegExp);
+    if(parts.length === 0) return escapeHtml(text);
+    const re = new RegExp('(' + parts.join('|') + ')', 'ig');
+    return escapeHtml(text).replace(re, (m) => `<mark class="search-hit">${m}</mark>`);
   }
 
   // Build Prism classes for pre/code
@@ -349,12 +386,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return { pre, code };
   }
 
+  // Search predicate: multi-keyword across text + tag
+  function matchesQuery(note, query){
+    if(!query) return true;
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if(terms.length === 0) return true;
+    const hay = (note.text + ' ' + (note.tag || '')).toLowerCase();
+    return terms.every(t => hay.indexOf(t) !== -1);
+  }
+
   // Render the notes list
   function renderNotes(){
     noteListEl.innerHTML = '';
     if(!notes.length){ noteListEl.innerHTML = '<p style="opacity:.6">No notes yet.</p>'; return; }
 
-    const q = (searchEl.value || '').toLowerCase();
+    const q = (searchEl.value || '').trim();
 
     // sort pinned first, then by order if present, else createdAt desc
     const sorted = notes.slice().sort((a,b) => {
@@ -364,6 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     for(const n of sorted){
+      if(!matchesQuery(n, q)) continue;
+
       // build preview (limit length)
       let previewRaw = n.text.length > 220 ? n.text.slice(0,220) + '…' : n.text;
       let previewHtml = q ? highlightText(previewRaw, q) : escapeHtml(previewRaw);
@@ -411,6 +459,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Live markdown preview while typing
+  function renderLivePreview(){
+    const text = noteEl.value || '';
+    const lang = langSelect.value || '';
+
+    // If a code language is selected, show code block (Prism) on RHS
+    if(lang){
+      const classes = buildLangClasses(lang);
+      savedNoteEl.innerHTML = `<div class="preview-split"><div class="preview"><h3>Editor</h3><pre style="white-space:pre-wrap;min-height:160px">${escapeHtml(text)}</pre></div><div class="preview right"><h3>Live Code Preview</h3><pre class="${classes.pre}"><code class="${classes.code}">${escapeHtml(text)}</code></pre></div></div>`;
+      Prism.highlightAllUnder(savedNoteEl);
+      // add copy button to right pre
+      const pre = savedNoteEl.querySelector('.preview.right pre');
+      if(pre){
+        const btn = document.createElement('button'); btn.className='code-copy'; btn.textContent='Copy';
+        btn.addEventListener('click', ()=> navigator.clipboard.writeText(text).then(()=>{ btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',1000); }));
+        pre.style.position='relative'; pre.appendChild(btn);
+      }
+    } else {
+      savedNoteEl.innerHTML = `<div class="preview-split"><div class="preview"><h3>Editor</h3><pre style="white-space:pre-wrap;min-height:160px">${escapeHtml(text)}</pre></div><div class="preview right"><h3>Live Markdown Preview</h3><div>${marked.parse(text || '')}</div></div></div>`;
+    }
+  }
+
   // Show note details with Prism highlight and markdown preview
   function showNoteDetails(id){
     const note = notes.find(n => n.id === Number(id));
@@ -418,21 +488,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const classes = buildLangClasses(note.lang || '');
     let mainHtml = '';
     if(note.lang){
-      mainHtml = `<pre class="${classes.pre}"><button class="code-copy" onclick="(function(b){ navigator.clipboard.writeText(b.querySelector('code').innerText).then(()=>{const old=b.querySelector('button').textContent; b.querySelector('button').textContent='Copied!'; setTimeout(()=>b.querySelector('button').textContent=old,1200); }).catch(()=>alert('Copy failed')); })(this.parentElement)"><!--inline--></button><code class="${classes.code}">${escapeHtml(note.text)}</code></pre>`;
-      // The inline button above is a little hack — we'll replace it below with a real handler to avoid inline JS; simpler: we'll just create DOM elements after set.
+      mainHtml = `<pre class="${classes.pre}"><code class="${classes.code}">${escapeHtml(note.text)}</code></pre>`;
     } else {
-      mainHtml = `<p>${escapeHtml(note.text).replace(/\n/g,'<br>')}</p>`;
+      mainHtml = `<div>${marked.parse(note.text)}</div>`;
     }
-
-    // markdown preview if it looks like markdown
-    let mdPreview = '';
-    try {
-      if((!note.lang || note.lang === 'html') && /(^|\n)\s*#{1,6}\s+/.test(note.text + '\n')){
-        mdPreview = `<h4 style="margin-top:10px">Markdown Preview</h4><div>${marked.parse(note.text)}</div>`;
-      } else if(note.lang && note.lang.includes('markdown')){
-        mdPreview = `<h4 style="margin-top:10px">Markdown Preview</h4><div>${marked.parse(note.text)}</div>`;
-      }
-    }catch(e){ mdPreview = ''; }
 
     const tagHtml = note.tag ? `<div style="margin-top:8px"><span class="tag ${escapeHtml(note.tag)}">${escapeHtml(note.tag)}</span></div>` : '';
 
@@ -440,7 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <h3>Note Details</h3>
       <div id="note-main">${mainHtml}</div>
       ${tagHtml}
-      ${mdPreview}
       <p style="margin-top:12px"><strong>Created:</strong> ${new Date(note.createdAt).toLocaleString()}</p>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button id="detail-edit" class="btn primary">Edit</button>
@@ -455,7 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // add copy button to pre if exists
     const preEl = savedNoteEl.querySelector('pre');
     if(preEl){
-      // create copy button correctly (not inline JS)
       const btn = document.createElement('button');
       btn.className = 'code-copy';
       btn.textContent = 'Copy';
@@ -477,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
       editNote(note.id);
     });
     document.getElementById('detail-delete').addEventListener('click', ()=> {
-      deleteNote(note.id);
+      scheduleDelete(note.id);
     });
 
     Prism.highlightAllUnder(savedNoteEl);
@@ -498,7 +555,8 @@ document.addEventListener('DOMContentLoaded', () => {
         notes[idx].lang = lang;
         notes[idx].tag = tag;
         notes[idx].pinned = pinned;
-        // keep createdAt, order
+      } else {
+        notes.push({ id: editingId, text, lang, tag, pinned, createdAt: new Date().toISOString() });
       }
       editingId = null;
     } else {
@@ -508,11 +566,41 @@ document.addEventListener('DOMContentLoaded', () => {
     persist();
     renderNotes();
     clearDraft(false);
+    renderLivePreview();
   }
 
-  // Delete note
-  function deleteNote(id){
-    if(!confirm('Delete this note?')) return;
+  // Soft-delete with undo
+  function scheduleDelete(id){
+    const idx = notes.findIndex(n => n.id === id);
+    if(idx === -1) return;
+    const note = notes[idx];
+    // Remove immediately from the UI list (optimistic)
+    notes.splice(idx,1);
+    persist();
+    renderNotes();
+    // Save lastDeleted and give user ~6 seconds to undo
+    if(lastDeleted && lastDeleted.timeoutId) { clearTimeout(lastDeleted.timeoutId); lastDeleted = null; }
+    const timeoutId = setTimeout(()=> {
+      lastDeleted = null;
+      hideSnackbar();
+      // permanently gone (we already removed from notes and persisted)
+    }, 6000);
+    lastDeleted = { note, timeoutId };
+    showSnackbar('Note deleted', true);
+  }
+
+  function undoDelete(){
+    if(!lastDeleted) return;
+    clearTimeout(lastDeleted.timeoutId);
+    notes.push(lastDeleted.note);
+    persist();
+    lastDeleted = null;
+    renderNotes();
+    hideSnackbar();
+  }
+
+  // Delete immediately (used rarely when confirming)
+  function deleteNoteImmediate(id){
     notes = notes.filter(n => n.id !== id);
     persist();
     renderNotes();
@@ -529,11 +617,12 @@ document.addEventListener('DOMContentLoaded', () => {
     tagSelect.value = n.tag || '';
     pinCheck.checked = !!n.pinned;
     editingId = n.id;
-    // remove temporary from array; keep for re-save - we'll update on save
+    // remove temporary from array so save replaces it
     notes.splice(idx,1);
     persist();
     renderNotes();
     noteEl.focus();
+    renderLivePreview();
   }
 
   // Toggle pin
@@ -551,10 +640,11 @@ document.addEventListener('DOMContentLoaded', () => {
     tagSelect.value = '';
     pinCheck.checked = false;
     editingId = null;
+    renderLivePreview();
     if(showAlert) alert('Draft cleared.');
   }
 
-  // Export/Import
+  // Export/Import (improved import)
   function exportNotes(){
     const data = JSON.stringify(notes, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
@@ -562,17 +652,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = document.createElement('a'); a.href = url; a.download = 'glasspad-notes.json'; a.click();
     URL.revokeObjectURL(url);
   }
+
   function importNotes(file){
     const reader = new FileReader();
     reader.onload = () => {
       try{
         const imported = JSON.parse(reader.result);
-        if(!Array.isArray(imported)) throw new Error('Invalid file');
-        // set unique IDs for imported items
-        imported.forEach(it => it.id = uid());
-        notes = notes.concat(imported);
-        persist(); renderNotes();
-        alert('Imported notes added.');
+        if(!Array.isArray(imported)) throw new Error('Invalid file format (expected array)');
+        // detect duplicates by text + createdAt
+        const dupes = [];
+        const additions = [];
+        for(const it of imported){
+          const exists = notes.some(n => n.text === it.text && n.createdAt === it.createdAt);
+          if(exists) dupes.push(it);
+          else additions.push(it);
+        }
+        if(dupes.length > 0){
+          // ask user: skip duplicates (merge), or replace all
+          const choice = confirm(`${dupes.length} duplicate(s) detected. OK to merge (skip duplicates). Cancel to replace all notes with imported file.`);
+          if(choice){
+            // Merge: append additions, assign new ids
+            additions.forEach(it => {
+              it.id = uid();
+              it.createdAt = it.createdAt || new Date().toISOString();
+              notes.push(it);
+            });
+            persist(); renderNotes(); alert('Import merged (skipped duplicates).');
+          } else {
+            // Replace all
+            const cleaned = imported.map(it => {
+              return { id: uid(), text: it.text || '', lang: it.lang || '', tag: it.tag || '', pinned: !!it.pinned, createdAt: it.createdAt || new Date().toISOString() };
+            });
+            notes = cleaned;
+            persist(); renderNotes(); alert('Imported notes replaced current notes.');
+          }
+        } else {
+          // no duplicates: append
+          imported.forEach(it => {
+            it.id = uid();
+            it.createdAt = it.createdAt || new Date().toISOString();
+            notes.push(it);
+          });
+          persist(); renderNotes(); alert('Imported notes added.');
+        }
       }catch(e){
         alert('Import failed: ' + e.message);
       }
@@ -628,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
-  // Swipe touch handlers for mobile
+  // Swipe touch handlers for mobile: right = pin/unpin, left = delete-with-undo
   function addSwipeHandlers(el){
     let startX = 0, startY = 0, active = false;
     el.addEventListener('touchstart', (e) => {
@@ -659,16 +781,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       el.style.transform = 'translateX(0)';
+      const id = Number(el.dataset.id);
       if(tx < -100){
-        // delete
-        const id = Number(el.dataset.id);
-        if(confirm('Delete this note?')) deleteNote(id);
+        // delete (undoable)
+        scheduleDelete(id);
       } else if(tx > 100){
-        const id = Number(el.dataset.id);
-        editNote(id);
+        // pin/unpin
+        togglePin(id);
       }
     }, {passive:true});
   }
+
+  // Snackbar helpers
+  function showSnackbar(msg, showUndo){
+    snackMsg.textContent = msg;
+    snackUndo.style.display = showUndo ? 'inline-block' : 'none';
+    snackbar.classList.add('show');
+  }
+  function hideSnackbar(){
+    snackbar.classList.remove('show');
+  }
+  snackUndo.addEventListener('click', () => undoDelete());
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -677,12 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(mod && e.key.toLowerCase() === 'k'){ e.preventDefault(); searchEl.focus(); }
     if(e.key === 'Escape'){ // cancel edit/drafts quickly
       editingId = null;
-      // optional: clearDraft(false);
     }
   });
-
-  // Render initially
-  renderNotes();
 
   // --- Event wiring (DOM elements) ---
   // Save
@@ -692,6 +821,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clear draft
   const clearDraftBtn = document.getElementById('clearDraftBtn');
   clearDraftBtn && clearDraftBtn.addEventListener('click', ()=> clearDraft(true));
+
+  // Live preview on input and language change
+  noteEl.addEventListener('input', renderLivePreview);
+  langSelect.addEventListener('change', renderLivePreview);
 
   // Search
   searchEl && searchEl.addEventListener('input', () => renderNotes());
@@ -730,7 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Sound toggle
-  const soundBtn = document.getElementById('soundBtn');
   soundBtn && soundBtn.addEventListener('click', () => {
     if(ambientObj){ stopAmbient(); } else { startAmbient(); }
   });
@@ -741,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
     autosave = !autosave;
     autoBtn.textContent = `AutoSave: ${autosave ? 'On' : 'Off'}`;
     if(autosave && !autosaveTimer) {
-      autosaveTimer = setInterval(()=> { // restore interval if cleared
+      autosaveTimer = setInterval(()=> {
         if(!autosave) return;
         const draft = { text: noteEl.value, lang: langSelect.value, tag: tagSelect.value, pinned: pinCheck.checked, timestamp: Date.now() };
         localStorage.setItem('draft', JSON.stringify(draft));
@@ -756,7 +888,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.container').style.backdropFilter = `blur(${blur}px) saturate(180%)`;
   });
 
-  // PWA manifest + service worker (best-effort; will fail silently on file://)
+  // Render initially
+  renderNotes();
+  renderLivePreview();
+
+  // PWA manifest + service worker improved caching (best-effort)
   (function registerPWA(){
     try{
       const manifest = {
@@ -774,15 +910,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if('serviceWorker' in navigator){
         const swCode = `
-          const CACHE = 'glasspad-v1';
-          const urlsToCache = ['./'];
+          const CACHE = 'glasspad-v2';
+          const urlsToCache = ['./', 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.css', 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js', 'https://cdn.jsdelivr.net/npm/marked/marked.min.js', 'wallhaven-4yk87g_3840x2160.png'];
           self.addEventListener('install', e => {
             self.skipWaiting();
             e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(urlsToCache)).catch(()=>{}));
           });
           self.addEventListener('activate', e => { self.clients.claim(); });
           self.addEventListener('fetch', e => {
-            e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+            e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+              // optionally cache fetched assets
+              return res;
+            })));
           });
         `;
         const swBlob = new Blob([swCode], { type: 'application/javascript' });
@@ -792,10 +931,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(err){ console.warn('PWA skipped', err); }
   })();
 
-  // Helper to expose functions for inline copy button in old debug code if needed
+  // Expose a couple helpers for debugging
   window.showNoteDetails = showNoteDetails;
   window.editNote = editNote;
-  window.deleteNote = deleteNote;
+  window.deleteNoteImmediate = deleteNoteImmediate;
   window.togglePin = togglePin;
 
 }); // DOMContentLoaded
