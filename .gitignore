@@ -1,0 +1,10 @@
+# Firefox profiles & cache
+.mozilla/
+.var/
+
+# KDE/Plasma temp data
+.local/share/klipper/
+
+# System cache
+.cache/
+tmp/
